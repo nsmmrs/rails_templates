@@ -122,7 +122,8 @@ create_file "config/database.yml", <<~LINES
     database: #{app_name}_production
 LINES
 
-if yes?("Add heroku.yml?")
+case ask "Add heroku.yml?", limited_to: %w[y n], default: "y"
+when "y"
   heroku_yml = <<~LINES
     build:
       docker:
@@ -143,4 +144,16 @@ if yes?("Add heroku.yml?")
   LINES
 
   create_file "heroku.yml", heroku_yml
+end
+
+if scheme == "container"
+  symlink = ask <<~QUESTION.squish, limited_to: %w[y n], default: "n"
+    Docker does not recognize "Containerfile" and "container-compose.yml".
+    Create "Dockerfile" and "docker-compose.yml" as symlinks?
+  QUESTION
+
+  if symlink == "y"
+    create_link "Dockerfile", "Containerfile"
+    create_link "docker-compose.yml", "container-compose.yml"
+  end
 end
